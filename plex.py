@@ -202,19 +202,19 @@ class Client:
         group_listing = local_headers
         return group_listing, error
     
-    def generate_m3u(self, provider, listings, gracenote, channel_id_type):
+    def generate_m3u(self, provider, listings, gracenote, channel_id_type, start_chnno):
         local_token_keychain = self.token_keychain.copy()
         # print(json.dumps(listings, indent=2))
 
         m3u = "#EXTM3U\r\n\r\n"
-        for s in listings:
+        for idx, s in enumerate(listings):
             token = local_token_keychain.get(s.get('geo_code',''),{}).get('access_token')
             if channel_id_type == 'matthuisman':
                 m3u += f"#EXTINF:-1 channel-id=\"{provider}-{s.get('id')}\""
             else:
                 m3u += f"#EXTINF:-1 channel-id=\"{provider}-{s.get('slug')}\""
             m3u += f" tvg-id=\"{s.get('gridKey')}\""
-            m3u += f" tvg-chno=\"{s.get('number')}\"" if s.get('number') else ""
+            m3u += f" tvg-chno=\"{int(s.get('number', idx)) + start_chnno}\""
             m3u += f" tvg-logo=\"{''.join(map(str, s.get('logo', [])))}\"" if s.get('logo') else ""
             m3u += f" tvg-name=\"{s.get('call_sign')}\"" if s.get('call_sign') else ""
             if gracenote == 'include':
@@ -265,7 +265,9 @@ class Client:
 
         channel_id_type = args.get('compatibility')
 
-        m3u = self.generate_m3u(provider, listings, gracenote, channel_id_type)
+        start_chnno = int(args.get('start_chnno', 0))
+
+        m3u = self.generate_m3u(provider, listings, gracenote, channel_id_type, start_chnno)
         return m3u, error                        
 
     def call_token_api(self, local_headers, local_params, local_token_sessionAt, tokenResponse):

@@ -21,4 +21,4 @@ If you like this and other linear containers that I have created, please conside
 |---|---|---|
 | gracenote | "include" will utilize gracenote EPG information and filter to those streams utilizing Gracenote. "exclude" will filter those streams that do not have a matching gracenote EPG data. | 
 | regions | (Plex) Identify regions wanted in playlist. Can utilize multiple regions | local
-
+| chnno_start | Start numbering channels at this number; for channels that have numbers already (freelivesports) add this value to their number. | 0 |

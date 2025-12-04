@@ -221,8 +221,10 @@ class Client:
         else:
             data_group = stations
 
+        start_chnno = int(args.get('start_chnno', 0))
+
         m3u = "#EXTM3U\r\n\r\n"
-        for s in data_group:
+        for idx, s in enumerate(data_group):
             url = s.get('url')
             if "ott-studio" in url:
                 base_url = self.generate_url(url, ['m','aid'])
@@ -235,7 +237,7 @@ class Client:
 
             m3u += f"#EXTINF:-1 channel-id=\"{provider}-{s.get('id')}\""
             m3u += f" tvg-id=\"{s.get('id')}\""
-            m3u += f" tvg-chno=\"{s.get('channelNumber')}\"" if s.get('channelNumber') else ""
+            m3u += f" tvg-chno=\"{int(s.get('channelNumber', idx)) + start_chnno}\""
             m3u += f" group-title=\"{';'.join(map(str, group))}\"" if group else ""
             m3u += f" tvg-logo=\"{''.join(map(str, s.get('thumbnail', [])))}\"" if s.get('thumbnail') else ""
             m3u += f" tvg-name=\"{s.get('call_sign')}\"" if s.get('call_sign') else ""
