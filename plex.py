@@ -743,6 +743,7 @@ class Client:
     def process_station(self, station, date, epg_channels):
         response_content = self.read_epg_from_api(date, epg_channels.get(station))
         modified_content = re.sub(r'<\?xml\s+version="1.0"\s*\?>', '', response_content)
+        modified_content = self.strip_illegal_characters(modified_content)
 
         date_folder = Path(f"{self.data_path}/{date}")
         filename = f"{station}_{date}.xml"
