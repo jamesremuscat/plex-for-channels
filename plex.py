@@ -299,8 +299,8 @@ class Client:
         if tokenResponse.status_code not in (200, 201):
             print(f"HTTP: {tokenResponse.status_code}: {tokenResponse.text}")
             return None, None, None, tokenResponse.text
-        else:
-            resp = tokenResponse.json()
+        #else:
+        #    resp = tokenResponse.json()
 
         # print(json.dumps(resp, indent = 2))
         # with self.lock:
@@ -331,19 +331,28 @@ class Client:
                 error = f'[ERROR - {self.client_name.upper()}] Geo Code {geo_code} Not Found'
                 print(error)
                 return None, error
-            
+
             token_headers.update({"X-Forwarded-For": local_x_forward.get(geo_code)})
             tokenResponse = local_tokenResponses.get(geo_code)
             tokenResponse, local_token_sessionAt, error = self.call_token_api(token_headers, token_params, local_token_keychain.get(geo_code, {}).get('token_sessionAt', 0), tokenResponse)
-        
+
             if error: return None, error
 
-            resp = tokenResponse.json()
+            error_text = f'[ERROR - {self.client_name.upper()}] No Token located for {geo_code}'
 
-            access_token = resp.get('authToken', None)
+            access_token = None
+            token_regex = "authToken=\"([A-Za-z0-9=]+)\""
+
+            token_match = re.search(token_regex, tokenResponse.text)
+            if token_match:
+                access_token = token_match.group(1)
+                print(f"[DEBUG - {self.client_name.upper()}] Retrieved access token {access_token}")
+            else:
+                print(error_text)
+                return None, error
+
             if not access_token:
-                error = f'[ERROR - {self.client_name.upper()}] No Token located for {geo_code}'
-                print(error)
+                print(error_text)
                 return None, error
 
             local_tokenResponses.update({geo_code: tokenResponse})
@@ -493,14 +502,14 @@ class Client:
                 access_token = token_keychain.get(geo_code,{}).get('access_token')
                 if access_token:
                     print(f'[INFO - {self.client_name.upper()}] Access Token located for {geo_code.upper()}')
-                    local_params.update({'X-Plex-Token': access_token})
+                    local_headers.update({'X-Plex-Token': access_token})
                     i = end_loop
                     failure = False
                 else:
                     print(f'[INFO - {self.client_name.upper()}] No Token: Generate Token for {geo_code.upper()}')
                     token_keychain = self.token({'regions': geo_code})
                     i += 1
-            if failure: 
+            if failure:
                 error = f'[INFO - {self.client_name.upper()}] No Token Located for {geo_code.upper()}'
                 return None, error
 
